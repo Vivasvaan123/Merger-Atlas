@@ -1,0 +1,24 @@
+Merger Atlas interface redesign v2
+
+PASS: Real browser/Plotly: full fixture loads and counts match
+PASS: Native mask decoding, layer switching, opacity and class toggle
+PASS: Exact overlap cycling preserves object identity
+PASS: PCA/Measurements view separation
+PASS: Continuous color and missing-gray trace
+PASS: Redshift filters produce expected count
+PASS: Selected row identities retained across filtering
+PASS: Invalid manual range reports error without dataset mutation
+PASS: Share link captures applied view
+PASS: Share link restores filters, mode and pinned object
+PASS: Methods dialog opens/closes
+PASS: 390px mobile layout has no horizontal page overflow
+PASS: No JavaScript page errors during tested interactions
+PASS: All direct JavaScript DOM references resolve to unique HTML IDs
+PASS: JavaScript syntax compilation
+PASS: Eight helper checks: quantiles, manual validation, missing values, constants, CSV
+PASS: Exact-key search and missing-mask fallback keep raw image available
+PASS: 1600px desktop layout has no page overflow
+
+Browser: headless Chromium, real bundled Plotly.js 3.0.1, 120 synthetic records and small synthetic image/mask fixtures. Asset requests were served by test routes; no live remote website was inspected. Desktop 1440/1600px and mobile 390px tested.
+
+Not tested: actual 51,622-row load/performance, real asset host/CORS, your original images/masks, production GitHub deployment, all browser engines, manual accessibility audit, native mouse lasso gesture (selection handler tested via emitted Plotly event), large real CSV download content. Existing share-link schema exercised with fixture links.

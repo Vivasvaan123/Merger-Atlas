@@ -1,18 +1,1 @@
-
-const fs=require('fs'),vm=require('vm');
-const source=fs.readFileSync(process.argv[2],'utf8').replace(/start\(\);\s*$/,'');
-const els={clo:{value:'0'},chi:{value:'2'}};
-const ctx={console,document:{getElementById:id=>els[id]},Map,Set,Number,Math,JSON,Array,Error,Blob:global.Blob,setTimeout,clearTimeout};vm.createContext(ctx);vm.runInContext(source,ctx);
-vm.runInContext(`
-cols={x:[null,-100,0,1,2,100],constant:[4,4],empty:[null]};
-function assert(v,m){if(!v)throw Error(m);}
-assert(quantile([0,10],.5)===5,'quantile interpolation');
-assert(JSON.stringify(bounds('x','full'))==='[-100,100]','full bounds');
-assert(JSON.stringify(bounds('x','pct'))===JSON.stringify([-96,96.08]),'percentile bounds');
-assert(JSON.stringify(bounds('x','manual','clo','chi'))==='[0,2]','manual bounds');
-assert(bounds('constant','full')[0]<4&&bounds('constant','full')[1]>4,'constant padding');
-assert(JSON.stringify(bounds('empty','full'))==='[0,1]','empty bounds');
-assert(csvValue('a"b')==='"a""b"','CSV escaping');
-`,ctx);
-els.clo.value='2';els.chi.value='1';let rejected=false;try{vm.runInContext("bounds('x','manual','clo','chi')",ctx)}catch(e){rejected=true}if(!rejected)throw Error('invalid manual not rejected');
-console.log('8 JavaScript helper checks passed');
+const vm=require('vm'),fs=require('fs');const src=fs.readFileSync(process.argv[2],'utf8').replace(/start\(\);\s*$/,'');const els={lo:{value:'0'},hi:{value:'1'}};const ctx={document:{getElementById:id=>els[id]},console,Map,Set,Math,Number,JSON,Array,Error};vm.createContext(ctx);vm.runInContext(src,ctx);vm.runInContext(`S.cols={t:[null,-100,0,1,2,100],constant:[4,4],empty:[null]};function assert(v,m){if(!v)throw Error(m);}assert(quantile([0,10],.5)===5,'interpolation');assert(JSON.stringify(bounds('t','full'))==='[-100,100]','full');assert(JSON.stringify(bounds('t','pct'))==='[-96,96.08]','percentiles');assert(bounds('constant','full')[0]<4&&bounds('constant','full')[1]>4,'constant');assert(JSON.stringify(bounds('empty','full'))==='[0,1]','empty');assert(csvValue('a"b')==='"a""b"','CSV escaping');assert(JSON.stringify(bounds('t','manual','lo','hi'))==='[0,1]','manual');`,ctx);els.lo.value='';let rejected=false;try{vm.runInContext("bounds('t','manual','lo','hi')",ctx);}catch(e){rejected=true;}if(!rejected)throw Error('blank manual accepted');console.log('8 helper checks passed');
