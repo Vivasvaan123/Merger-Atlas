@@ -36,13 +36,13 @@ function csvValue(v){return '"'+String(v??"").replaceAll('"','""')+'"';}
 function exportCSV(){const names=Object.keys(cols),lines=[["fit_id",...names].map(csvValue).join(",")];for(const row of [...selected].sort((a,b)=>a-b))lines.push([manifest.fit_id,...names.map(k=>cols[k][row])].map(csvValue).join(","));const url=URL.createObjectURL(new Blob([lines.join("\r\n")],{type:"text/csv;charset=utf-8"}));const a=document.createElement("a");a.href=url;a.download="galaxy_selection.csv";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 async function getJSON(path){const r=await fetch(path);if(!r.ok)throw Error(`${path}: HTTP ${r.status}. Copy the exported data folder beside index.html and use an HTTP server, not file://.`);return r.json();}
 async function start(){try{if(typeof Plotly==="undefined")throw Error("Plotly could not load. This prototype needs internet access to cdn.plot.ly.");[data,manifest]=await Promise.all([getJSON("data/galaxies.json"),getJSON("data/manifest.json")]);cols=data.columns;axes=data.axes;if(data.fit_id!==manifest.fit_id)throw Error("Data and manifest fit IDs do not match.");for(const [key,values]of Object.entries(cols))if(!Array.isArray(values)||values.length!==data.row_count)throw Error(`Invalid column length: ${key}`);
-const previewData=await getJSON("data/previews.json");if(previewData.fit_id!==data.fit_id)throw Error("Preview/data fit IDs do not match.");previews=new Map(previewData.records.map(p=>[p.row,p]));try{previewErrors=await getJSON("data/preview_errors.json");}catch(e){console.warn(e);}
+const previewData=await getJSON("data/previews_full.json");if(previewData.fit_id!==data.fit_id)throw Error("Preview/data fit IDs do not match.");previews=new Map(previewData.records.map(p=>[p.row,p]));try{previewErrors=await getJSON("data/preview_errors_full.json");}catch(e){console.warn(e);}
 for(const id of ["x","y"]){const groups=new Map();for(const a of axes.filter(a=>!["pc1","pc2"].includes(a.token))){const category=a.label.split(" / ")[0];if(!groups.has(category)){const g=document.createElement("optgroup");g.label=category;$(id).append(g);groups.set(category,g);}option(groups.get(category),a.label,a.token);}}
 $("x").value=cols["catalog:phz_pp_median_stellarmass"]?"catalog:phz_pp_median_stellarmass":$("x").options[0].value;$("y").value=cols["catalog:phz_pp_median_sfr"]?"catalog:phz_pp_median_sfr":$("y").options[Math.min(1,$("y").options.length-1)].value;
 option($("color"),"Shape cluster","cluster");option($("color"),"Saved merger stage","stage");for(const a of axes.filter(a=>!["pc1","pc2"].includes(a.token)))option($("color"),a.label,a.token);
 for(const c of [...new Set(cols.cluster)].sort((a,b)=>a-b)){option($("clusters"),`Cluster ${c}`,c);$("clusters").lastChild.selected=true;}
 const z=cols["catalog:phz_median"];if(z&&sorted("catalog:phz_median").length){const a=sorted("catalog:phz_median");$("zlo").value=a[0];$("zhi").value=a.at(-1);}else{$("zlo").disabled=true;$("zhi").disabled=true;}
-for(const p of previews.values())if(p.image)option($("examples"),`${p.row}: ${p.key}`,p.row);
+for(const p of [...previews.values()].filter(p=>p.image).slice(0,100))if(p.image)option($("examples"),`${p.row}: ${p.key}`,p.row);
 $("controls").disabled=false;$("load").textContent=`Loaded ${data.row_count.toLocaleString()} fitted galaxies; ${[...previews.values()].filter(p=>p.image).length} image previews and ${[...previews.values()].filter(p=>p.overlay).length} overlays. No Python callbacks required.`;
 $("provenance").textContent=`Fit ${manifest.fit_id}. Features: ${manifest.feature_columns.length}. PC1/PC2 variance: ${manifest.explained_variance_ratio.map(v=>(100*v).toFixed(1)+"%").join(" / ")}. Vote transform: ${manifest.vote_transform}.`;
 $("apply").onclick=render;$("mode").onchange=render;for(const id of ["x","y","color"])$(id).onchange=render;
@@ -51,5 +51,6 @@ $("amode").onchange=()=>{if($("amode").value==="manual"&&viewBounds)["xl","xh","
 $("reset").onclick=()=>{for(const o of $("clusters").options)o.selected=true;if(z&&sorted("catalog:phz_median").length){$("zlo").value=sorted("catalog:phz_median")[0];$("zhi").value=sorted("catalog:phz_median").at(-1);}render();};
 $("clear").onclick=()=>{selected.clear();render();};$("export").onclick=exportCSV;$("layer").onchange=showImage;$("examples").onchange=()=>{if($("examples").value!==""){$("pin").checked=true;inspect(Number($("examples").value));}};
 await render();
+await atlasReady();
 }catch(e){$("load").textContent="Website startup failed.";err(e);}}
 start();
